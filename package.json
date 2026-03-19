@@ -1,0 +1,32 @@
+{
+  "name": "claude-code-stats",
+  "version": "2.0.1",
+  "description": "Spotify Wrapped for Claude Code - visualize your AI coding stats, token usage, and costs",
+  "bin": {
+    "claude-code-stats": "./bin/claude-entropy.js"
+  },
+  "keywords": [
+    "claude",
+    "claude-code",
+    "stats",
+    "analytics",
+    "tokens",
+    "cost",
+    "usage",
+    "wrapped",
+    "ai-coding"
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/buildingopen/claude-code-stats",
+  "author": "Federico De Ponte",
+  "bugs": {
+    "url": "https://github.com/buildingopen/claude-code-stats/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/buildingopen/claude-code-stats.git"
+  },
+  "engines": {
+    "node": ">=14"
+  }
+}

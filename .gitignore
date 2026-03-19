@@ -1,0 +1,14 @@
+reports/
+__pycache__/
+*.pyc
+*.png
+.env
+.pytest_cache/
+WORKPLAN-*.md
+# Pattern outputs (generated, large)
+patterns/*.md
+patterns/*.txt
+# FINDINGS.md is auto-generated
+FINDINGS.md
+# Generated wrapped output
+dist/
