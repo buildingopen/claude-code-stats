@@ -1,1 +1,2 @@
-google-genai==1.60.0
+# No external dependencies required.
+# All analysis uses Python stdlib only.
