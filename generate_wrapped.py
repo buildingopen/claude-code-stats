@@ -1701,9 +1701,13 @@ def main():
     print("  \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518")
     print()
 
+    sys.stdout.write("  \u2026 Scanning sessions...\r")
+    sys.stdout.flush()
     data = collect_data()
     _step("Scanning sessions", f"{data['session_count']} found")
 
+    sys.stdout.write("  \u2026 Analyzing patterns...\r")
+    sys.stdout.flush()
     d = compute_aggregates(data)
     _step("Analyzing patterns", f"{d['hours']} hours of coding")
 

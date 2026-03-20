@@ -177,7 +177,7 @@ function main() {
   const scriptDir = path.join(__dirname, '..');
   const scriptPath = path.join(scriptDir, 'generate_wrapped.py');
 
-  const result = spawnSync(pythonCmd, [scriptPath, ...pyArgs], {
+  const result = spawnSync(pythonCmd, ['-u', scriptPath, ...pyArgs], {
     cwd: scriptDir,
     env,
     stdio: 'inherit',
