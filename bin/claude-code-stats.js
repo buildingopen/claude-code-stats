@@ -5,28 +5,30 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 
+const PLANS = {
+  'pro':   { money: '20',  detail: 'Pro' },
+  'max':   { money: '200', detail: 'Max 20x' },
+  'max5':  { money: '100', detail: 'Max 5x' },
+  'max20': { money: '200', detail: 'Max 20x' },
+};
+
 const HELP = `
 Claude Code Stats - Your AI coding story, visualized.
 
-Usage: npx claude-code-stats [options]
+Usage: npx claude-code-stats
+       npx claude-code-stats --plan max
 
 Options:
+  --plan PLAN          pro | max5 | max (default: max)
   --author NAME        Display name (default: git user.name)
-  --tz HOURS           UTC offset for local time (default: auto-detect)
-  --money USD          Total subscription cost for ROI slide
-  --money-detail DESC  Subscription description
-  --sanitize           Anonymize project names in local HTML
-  --publish            Publish to entropy.buildingopen.org (auto-sanitized)
+  --sanitize           Anonymize project names for sharing
+  --publish            Publish to entropy.buildingopen.org
   -v, --version        Show version
   -h, --help           Show this help
 
-100% local analysis. Data never leaves your machine unless you --publish.
-Project names, prompts, and swear words are auto-stripped before publishing.
+All analysis runs locally. No data leaves your machine unless you --publish.
 
 Output: ./wrapped.html (auto-opens in browser)
-
-For more reports (prompt-coach, user-profile, soul, portrait):
-  npx claude-entropy-lab <command>
 `.trim();
 
 function parseArgs(argv) {
@@ -42,9 +44,8 @@ function parseArgs(argv) {
       args.sanitize = true;
     } else if (arg === '--publish') {
       args.publish = true;
-    } else if (arg === '--no-publish') {
-      // deprecated, now the default - silently accept
-      args.noPublish = true;
+    } else if (arg === '--plan' && i + 1 < argv.length) {
+      args.plan = argv[++i].toLowerCase();
     } else if (arg === '--author' && i + 1 < argv.length) {
       args.author = argv[++i];
     } else if (arg === '--tz' && i + 1 < argv.length) {
@@ -96,14 +97,6 @@ function main() {
     process.exit(0);
   }
 
-  // Redirect old subcommands to claude-entropy-lab
-  const OLD_COMMANDS = ['prompt-coach', 'user-profile', 'soul', 'portrait'];
-  if (args._[0] && OLD_COMMANDS.includes(args._[0].toLowerCase())) {
-    console.error('The "' + args._[0] + '" report has moved to a separate package.');
-    console.error('Run: npx claude-entropy-lab ' + args._[0]);
-    process.exit(1);
-  }
-
   // Find a working Python 3.8+
   const pythonCmd = findPython();
   if (!pythonCmd) {
@@ -130,7 +123,6 @@ function main() {
     console.error('Error: No Claude Code data found at ' + dataDir);
     console.error('Make sure you have used Claude Code at least once.');
     console.error('Override with CLAUDE_PROJECTS_DIR env var if data is elsewhere.');
-    console.error('Multiple directories supported with : separator (e.g. /path/one:/path/two)');
     process.exit(1);
   }
 
@@ -156,8 +148,25 @@ function main() {
     env.WRAPPED_TZ_OFFSET = String(-new Date().getTimezoneOffset() / 60);
   }
 
-  if (args.money) env.WRAPPED_MONEY_PAID = args.money;
-  if (args.moneyDetail) env.WRAPPED_MONEY_DETAIL = args.moneyDetail;
+  // Plan: --plan flag > --money/--money-detail > default (max)
+  if (args.plan) {
+    const plan = PLANS[args.plan];
+    if (!plan) {
+      console.error('Unknown plan: ' + args.plan);
+      console.error('Available: ' + Object.keys(PLANS).join(', '));
+      process.exit(1);
+    }
+    env.WRAPPED_MONEY_PAID = plan.money;
+    env.WRAPPED_MONEY_DETAIL = plan.detail;
+  } else if (args.money) {
+    env.WRAPPED_MONEY_PAID = args.money;
+    if (args.moneyDetail) env.WRAPPED_MONEY_DETAIL = args.moneyDetail;
+  } else {
+    // Default to Max 20x
+    env.WRAPPED_MONEY_PAID = PLANS.max.money;
+    env.WRAPPED_MONEY_DETAIL = PLANS.max.detail;
+  }
+
   if (args.sanitize) env.WRAPPED_SANITIZE = '1';
 
   // Build python args
