@@ -201,11 +201,13 @@ def censor_word(w):
 # ---------------------------------------------------------------------------
 # Main pipeline
 # ---------------------------------------------------------------------------
-def collect_data(max_sessions=None):
+def collect_data(max_sessions=None, on_progress=None):
     """Single pass over all sessions, calling all analyzers."""
     sessions = find_all_sessions()
     if max_sessions:
         sessions = sessions[:max_sessions]
+
+    total = len(sessions)
 
     # Accumulators
     outcomes = []
@@ -219,6 +221,8 @@ def collect_data(max_sessions=None):
     session_word_counts = {}  # filepath -> list of word counts per user msg
 
     for i, filepath in enumerate(sessions):
+        if on_progress and i % 5 == 0:
+            on_progress(i + 1, total)
         # 1. Session outcomes
         try:
             o = analyze_outcome(filepath)
@@ -1669,11 +1673,72 @@ def get_community_count():
         return None
 
 
-def _step(label, value="", width=38):
-    """Print a progress step with checkmark."""
-    padding = max(1, width - len(label))
-    check = "\u2713" if value else "\u2026"
-    sys.stdout.write(f"  {check} {label}{'.' * padding} {value}\n")
+def _cli_supports_color():
+    """Check if terminal supports ANSI colors."""
+    if os.environ.get("NO_COLOR"):
+        return False
+    if os.environ.get("FORCE_COLOR"):
+        return True
+    return hasattr(sys.stdout, "isatty") and sys.stdout.isatty()
+
+_USE_COLOR = _cli_supports_color()
+
+def _c(code, text):
+    """Apply ANSI color code if supported."""
+    if not _USE_COLOR:
+        return text
+    return f"\033[{code}m{text}\033[0m"
+
+def _bold(t):    return _c("1", t)
+def _dim(t):     return _c("2", t)
+def _green(t):   return _c("32", t)
+def _cyan(t):    return _c("36", t)
+def _yellow(t):  return _c("33", t)
+def _white(t):   return _c("1;37", t)
+
+def _progress_bar(current, total, width=24):
+    """Render a progress bar: ████████░░░░ 47%"""
+    pct = current / max(total, 1)
+    filled = int(width * pct)
+    bar = "\u2588" * filled + "\u2591" * (width - filled)
+    return f"{bar} {int(pct * 100)}%"
+
+_IS_TTY = hasattr(sys.stdout, "isatty") and sys.stdout.isatty()
+
+def _clear_line():
+    """Clear current line (TTY only)."""
+    if _IS_TTY:
+        sys.stdout.write("\r\033[K")
+        sys.stdout.flush()
+
+def _overwrite_prev():
+    """Move cursor up one line and clear it (TTY only)."""
+    if _IS_TTY:
+        sys.stdout.write("\033[A\r\033[K")
+        sys.stdout.flush()
+
+def _phase(num, total, label, detail=""):
+    """Print a phase header (will be overwritten by _phase_done)."""
+    prefix = _dim(f"[{num}/{total}]")
+    if detail:
+        sys.stdout.write(f"  {prefix} {label} {_dim(detail)}\n")
+    else:
+        sys.stdout.write(f"  {prefix} {label}\n")
+    sys.stdout.flush()
+
+def _phase_done(num, total, label, detail):
+    """Print a completed phase with green check."""
+    prefix = _dim(f"[{num}/{total}]")
+    sys.stdout.write(f"  {prefix} {_green('\u2713')} {label} {_cyan(detail)}\n")
+    sys.stdout.flush()
+
+def _phase_progress(num, total, label, current, count):
+    """Update progress inline (carriage return, TTY only)."""
+    if not _IS_TTY:
+        return
+    prefix = f"[{num}/{total}]"
+    bar = _progress_bar(current, count)
+    sys.stdout.write(f"\r  {_dim(prefix)} {label} {bar} {_dim(f'{current}/{count}')}")
     sys.stdout.flush()
 
 
@@ -1687,36 +1752,43 @@ def main():
     should_publish = args.publish
     should_sanitize_local = args.sanitize or os.environ.get("WRAPPED_SANITIZE") == "1"
 
-    # Welcome banner
+    # ── Branding header ──
+    W = 48  # box inner width
+    HR = _dim("\u2500" * (W + 4))
+
     print()
-    print("  \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510")
-    print("  \u2502                                          \u2502")
-    print("  \u2502   Claude Code Stats                      \u2502")
-    print("  \u2502   Your AI coding story, visualized.       \u2502")
-    print("  \u2502                                          \u2502")
-    print("  \u2502   \u2714 100% local analysis                  \u2502")
-    print("  \u2502   \u2714 No AI calls, no network requests      \u2502")
-    print("  \u2502   \u2714 Pure Python, zero dependencies        \u2502")
-    print("  \u2502                                          \u2502")
-    print("  \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518")
+    print(f"  {_bold(_white('Claude Code Stats'))}")
+    print(f"  {_dim('by BuildingOpen \u00b7 github.com/buildingopen/claude-code-stats')}")
+    print()
+    print(f"  {_dim('\u2714 100% local')}   {_dim('\u2714 Zero dependencies')}   {_dim('\u2714 No network calls')}")
+    print(f"  {HR}")
     print()
 
-    sys.stdout.write("  \u2026 Scanning sessions...\r")
-    sys.stdout.flush()
-    data = collect_data()
-    _step("Scanning sessions", f"{data['session_count']} found")
+    # ── Phase 1: Scan sessions (with live progress bar) ──
+    def _scan_progress(current, total):
+        _phase_progress(1, 4, "Scanning sessions", current, total)
 
-    sys.stdout.write("  \u2026 Analyzing patterns...\r")
-    sys.stdout.flush()
+    data = collect_data(on_progress=_scan_progress)
+    _clear_line()
+    _phase_done(1, 4, "Scanning sessions", f"{data['session_count']} sessions found")
+
+    # ── Phase 2: Analyze patterns ──
+    _phase(2, 4, "Analyzing patterns...")
     d = compute_aggregates(data)
-    _step("Analyzing patterns", f"{d['hours']} hours of coding")
+    _overwrite_prev()
+    _phase_done(2, 4, "Analyzing patterns", f"{d['hours']} hours across {d['sessions']} sessions")
 
+    # ── Phase 3: Compute archetype ──
+    _phase(3, 4, "Computing your archetype...")
     rules = compute_rules(d)
     percentiles = compute_percentiles(d)
     archetype = compute_archetype(d, percentiles)
     arch_key, arch_name, arch_line, arch_share, arch_stats_html = archetype
-    _step("Computing your archetype", arch_name)
+    _overwrite_prev()
+    _phase_done(3, 4, "Your archetype", arch_name)
 
+    # ── Phase 4: Build report ──
+    _phase(4, 4, "Building report...")
     author = AUTHOR_NAME or "Claude Code User"
 
     # Always generate hash (used for og:image placeholder even in local mode)
@@ -1735,46 +1807,41 @@ def main():
     else:
         html = html.replace("__SHARE_HASH__", "preview")
 
-    _step("Building report", "done")
-
     # Apply local sanitization if requested
     if should_sanitize_local:
         html, local_counts = sanitize_html_for_publish(html)
-        _step("Sanitizing", "done")
 
     OUTPUT_DIR.mkdir(exist_ok=True)
     OUTPUT_PATH.write_text(html)
 
-    # Summary box
+    _overwrite_prev()
+    _phase_done(4, 4, "Report saved", "./recap.html")
+
+    # ── Summary card ──
     money = os.environ.get("WRAPPED_MONEY_PAID", "200")
     money_detail = os.environ.get("WRAPPED_MONEY_DETAIL", "")
     overall_pct = percentiles.get("overall", 0)
     roi = round(d["total_cost"] / max(int(money), 1))
     pct_label = f"top {100 - overall_pct}%" if overall_pct >= 50 else ""
 
-    def _box(text):
-        """Print a line inside the summary box, auto-padded to 42 chars."""
-        t = text[:40]
-        print(f"  \u2502  {t:<40}\u2502")
-
-    sessions_line = f"{d['sessions']} sessions, {d['hours']} hours, {fmt_compact(d['loc'])} LOC"
-    tokens_line = f"{d['tokens_display']}{d['tokens_suffix']} tokens, ${d['total_cost']:,.0f} est. cost"
-    roi_line = f"{roi}x return on ${money}/mo" + (f" ({money_detail})" if money_detail else "")
-    out_line = f"\u2192 ./recap.html"
+    sessions_line = f"{d['sessions']} sessions \u00b7 {d['hours']} hours \u00b7 {fmt_compact(d['loc'])} LOC"
+    tokens_line = f"{d['tokens_display']}{d['tokens_suffix']} tokens \u00b7 ${d['total_cost']:,.0f} estimated cost"
+    roi_line = f"{roi}x return on ${money}/mo" + (f" {money_detail}" if money_detail else "")
 
     print()
-    print("  \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510")
-    _box(author)
-    _box(arch_name)
+    print(f"  {HR}")
+    print()
+    print(f"  {_bold(_white(author))}")
+    arch_label = _bold(_yellow(arch_name))
     if pct_label:
-        _box(pct_label)
-    print(f"  \u2502{'':42}\u2502")
-    _box(sessions_line)
-    _box(tokens_line)
-    _box(roi_line)
-    print(f"  \u2502{'':42}\u2502")
-    _box(out_line)
-    print("  \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518")
+        arch_label += f" {_dim('\u00b7')} {_cyan(pct_label)}"
+    print(f"  {arch_label}")
+    print()
+    print(f"  {sessions_line}")
+    print(f"  {tokens_line}")
+    print(f"  {_green(roi_line)}")
+    print()
+    print(f"  {_dim('Open')} {_bold('./recap.html')} {_dim('in your browser to see your full story.')}")
     print()
 
     if should_publish:
