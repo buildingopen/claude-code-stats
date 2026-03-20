@@ -29,7 +29,7 @@ from patterns.project_stats import (
 )
 from patterns.error_taxonomy import classify_error
 
-VERSION = "2.0.7"
+VERSION = "2.0.8"
 
 # ---------------------------------------------------------------------------
 # 1. Formatting utilities
@@ -1201,7 +1201,7 @@ def main():
     _sr = "\033[0m" if _se else ""
 
     if not quiet:
-        sys.stderr.write(f"\n  {_sh}Claude Recap{_sr}\n")
+        sys.stderr.write(f"\n  {_sh}Claude Recap{_sr}  {_sd}github.com/buildingopen/claude-code-stats{_sr}\n")
         sys.stderr.write(f"  {_sd}100% local analysis · no data leaves your machine{_sr}\n\n")
         sys.stderr.write(f"  Discovering sessions...\n")
         sys.stderr.flush()
