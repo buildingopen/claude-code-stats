@@ -5,7 +5,7 @@ Spotify Wrapped for Claude Code. Analyzes your `~/.claude/projects/` session dat
 ## Quick Start
 
 ```bash
-npx cc-stats
+npx claude-recap
 ```
 
 That's it. Author name, timezone, and plan ($200 Max) are auto-detected. Generates `./wrapped.html` and opens it in your browser.
@@ -33,12 +33,12 @@ A self-contained HTML report with 20+ animated slides:
 ## Options
 
 ```bash
-npx cc-stats                    # Just works (defaults to Max 20x plan)
-npx cc-stats --plan pro         # Pro plan ($20/month)
-npx cc-stats --plan max5        # Max 5x ($100/month)
-npx cc-stats --sanitize         # Anonymize project names for sharing
-npx cc-stats --publish          # Publish to entropy.buildingopen.org
-npx cc-stats --help             # Show all options
+npx claude-recap                    # Just works (defaults to Max 20x plan)
+npx claude-recap --plan pro         # Pro plan ($20/month)
+npx claude-recap --plan max5        # Max 5x ($100/month)
+npx claude-recap --sanitize         # Anonymize project names for sharing
+npx claude-recap --publish          # Publish to entropy.buildingopen.org
+npx claude-recap --help             # Show all options
 ```
 
 ## How It Works
@@ -55,7 +55,7 @@ All processing happens locally. No data is sent anywhere unless you use `--publi
 If you use Claude Code on more than one machine, combine session directories:
 
 ```bash
-CLAUDE_PROJECTS_DIR="/path/to/mac-sessions:/path/to/server-sessions" npx cc-stats
+CLAUDE_PROJECTS_DIR="/path/to/mac-sessions:/path/to/server-sessions" npx claude-recap
 ```
 
 ## Privacy

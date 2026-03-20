@@ -1,9 +1,9 @@
 {
-  "name": "cc-stats",
+  "name": "claude-recap",
   "version": "1.0.0",
   "description": "Spotify Wrapped for Claude Code - visualize your AI coding stats, token usage, and costs",
   "bin": {
-    "cc-stats": "./bin/claude-code-stats.js"
+    "claude-recap": "./bin/claude-code-stats.js"
   },
   "keywords": [
     "claude",
