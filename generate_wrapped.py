@@ -1748,20 +1748,28 @@ def main():
     roi = round(d["total_cost"] / max(int(money), 1))
     pct_label = f"top {100 - overall_pct}%" if overall_pct >= 50 else ""
 
+    def _box(text):
+        """Print a line inside the summary box, auto-padded to 42 chars."""
+        t = text[:40]
+        print(f"  \u2502  {t:<40}\u2502")
+
+    sessions_line = f"{d['sessions']} sessions, {d['hours']} hours, {fmt_compact(d['loc'])} LOC"
+    tokens_line = f"{d['tokens_display']}{d['tokens_suffix']} tokens, ${d['total_cost']:,.0f} est. cost"
+    roi_line = f"{roi}x return on ${money}/mo" + (f" ({money_detail})" if money_detail else "")
+    out_line = f"\u2192 ./wrapped.html"
+
     print()
     print("  \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510")
-    print(f"  \u2502  {author:<40}\u2502")
-    print(f"  \u2502  {arch_name:<40}\u2502")
+    _box(author)
+    _box(arch_name)
     if pct_label:
-        print(f"  \u2502  {pct_label:<40}\u2502")
+        _box(pct_label)
     print(f"  \u2502{'':42}\u2502")
-    print(f"  \u2502  {d['sessions']} sessions, {d['hours']} hours, {fmt_compact(d['loc'])} LOC{'':<10}\u2502")
-    tokens_line = f"{d['tokens_display']}{d['tokens_suffix']} tokens, ${d['total_cost']:,.0f} estimated cost"
-    print(f"  \u2502  {tokens_line:<40}\u2502")
-    roi_line = f"{roi}x return on ${money}/mo" + (f" ({money_detail})" if money_detail else "")
-    print(f"  \u2502  {roi_line:<40}\u2502")
+    _box(sessions_line)
+    _box(tokens_line)
+    _box(roi_line)
     print(f"  \u2502{'':42}\u2502")
-    print(f"  \u2502  \u2192 {OUTPUT_PATH}{'':<20}\u2502")
+    _box(out_line)
     print("  \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518")
     print()
 

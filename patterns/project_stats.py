@@ -17,7 +17,6 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from extract import extract_conversation
 
 try:
     from patterns.config import CLAUDE_PROJECTS_DIR, output_path as _output_path, resolve_project_name, REJECTION_PATTERNS
