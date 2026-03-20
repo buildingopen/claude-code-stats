@@ -1,7 +1,7 @@
 {
   "name": "claude-recap",
-  "version": "1.0.4",
-  "description": "Spotify Wrapped for Claude Code - visualize your AI coding stats, token usage, and costs",
+  "version": "2.0.7",
+  "description": "Operational stats dashboard for Claude Code - sessions, costs, tokens, errors, trends",
   "bin": {
     "claude-recap": "./bin/claude-code-stats.js"
   },
@@ -13,8 +13,9 @@
     "tokens",
     "cost",
     "usage",
-    "wrapped",
-    "ai-coding"
+    "dashboard",
+    "ai-coding",
+    "cli"
   ],
   "license": "MIT",
   "homepage": "https://github.com/buildingopen/claude-code-stats",

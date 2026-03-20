@@ -6,29 +6,33 @@ const path = require('path');
 const os = require('os');
 
 const PLANS = {
-  'pro':   { money: '20',  detail: 'Pro' },
-  'max':   { money: '200', detail: 'Max 20x' },
-  'max5':  { money: '100', detail: 'Max 5x' },
-  'max20': { money: '200', detail: 'Max 20x' },
+  'pro':   { cost: '20',  label: 'Pro' },
+  'max5':  { cost: '100', label: 'Max 5x' },
+  'max':   { cost: '200', label: 'Max 20x' },
+  'max20': { cost: '200', label: 'Max 20x' },
 };
 
 const HELP = `
-Claude Code Stats - Your AI coding story, visualized.
+Claude Recap v2 - Operational stats for Claude Code.
 
-Usage: npx claude-recap
-       npx claude-recap --plan max
+Usage: npx claude-recap [options]
 
 Options:
-  --plan PLAN          pro | max5 | max (default: max)
-  --author NAME        Display name (default: git user.name)
-  --sanitize           Anonymize project names for sharing
-  --publish            Publish to entropy.buildingopen.org
+  --days N             Last N days only (default: all time)
+  --project NAME       Filter to one project
+  --plan PLAN          pro | max5 | max (default: max) for ROI calc
+  --json               Machine-readable JSON output
+  --html FILE          Export HTML dashboard to FILE
   -v, --version        Show version
   -h, --help           Show this help
 
-All analysis runs locally. No data leaves your machine unless you --publish.
-
-Output: ./recap.html (auto-opens in browser)
+Examples:
+  npx claude-recap                          Full dashboard, all time
+  npx claude-recap --days 7                 Last 7 days
+  npx claude-recap --project "OpenChat V4"  Single project
+  npx claude-recap --plan pro               ROI with $20/mo plan
+  npx claude-recap --json                   JSON output
+  npx claude-recap --html recap.html        Export HTML (open in browser for PDF)
 `.trim();
 
 function parseArgs(argv) {
@@ -40,20 +44,16 @@ function parseArgs(argv) {
       args.help = true;
     } else if (arg === '-v' || arg === '--version') {
       args.version = true;
-    } else if (arg === '--sanitize') {
-      args.sanitize = true;
-    } else if (arg === '--publish') {
-      args.publish = true;
+    } else if (arg === '--json') {
+      args.json = true;
+    } else if (arg === '--html' && i + 1 < argv.length) {
+      args.html = argv[++i];
+    } else if (arg === '--days' && i + 1 < argv.length) {
+      args.days = argv[++i];
+    } else if (arg === '--project' && i + 1 < argv.length) {
+      args.project = argv[++i];
     } else if (arg === '--plan' && i + 1 < argv.length) {
       args.plan = argv[++i].toLowerCase();
-    } else if (arg === '--author' && i + 1 < argv.length) {
-      args.author = argv[++i];
-    } else if (arg === '--tz' && i + 1 < argv.length) {
-      args.tz = argv[++i];
-    } else if (arg === '--money' && i + 1 < argv.length) {
-      args.money = argv[++i];
-    } else if (arg === '--money-detail' && i + 1 < argv.length) {
-      args.moneyDetail = argv[++i];
     } else {
       args._.push(arg);
     }
@@ -97,7 +97,7 @@ function main() {
     process.exit(0);
   }
 
-  // Find a working Python 3.8+
+  // Find Python 3.8+
   const pythonCmd = findPython();
   if (!pythonCmd) {
     console.error('Error: Python 3.8+ is required but not found.\n');
@@ -105,7 +105,6 @@ function main() {
       console.error('Install via Homebrew:  brew install python3');
     } else if (process.platform === 'win32') {
       console.error('Install via winget:    winget install Python.Python.3.12');
-      console.error('  or download from:    https://python.org/downloads/');
     } else {
       console.error('Install via your package manager:');
       console.error('  Ubuntu/Debian:  sudo apt install python3');
@@ -115,7 +114,7 @@ function main() {
     process.exit(1);
   }
 
-  // Check Claude Code data exists (supports colon-separated paths)
+  // Check Claude Code data exists
   const dataDir = process.env.CLAUDE_PROJECTS_DIR || path.join(os.homedir(), '.claude', 'projects');
   const dataDirs = dataDir.split(process.platform === 'win32' ? ';' : ':');
   const anyExists = dataDirs.some(d => fs.existsSync(d.trim()));
@@ -129,26 +128,7 @@ function main() {
   // Build env vars
   const env = { ...process.env };
 
-  // Author: CLI flag > env > git user.name > default
-  if (args.author) {
-    env.WRAPPED_AUTHOR = args.author;
-  } else if (!env.WRAPPED_AUTHOR) {
-    try {
-      const name = execSync('git config user.name', { encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] }).trim();
-      if (name) env.WRAPPED_AUTHOR = name;
-    } catch {
-      // git not available or no user.name set, will use Python default
-    }
-  }
-
-  // Timezone: CLI flag > env > auto-detect
-  if (args.tz !== undefined) {
-    env.WRAPPED_TZ_OFFSET = String(args.tz);
-  } else if (!env.WRAPPED_TZ_OFFSET) {
-    env.WRAPPED_TZ_OFFSET = String(-new Date().getTimezoneOffset() / 60);
-  }
-
-  // Plan: --plan flag > --money/--money-detail > default (max)
+  // Plan cost
   if (args.plan) {
     const plan = PLANS[args.plan];
     if (!plan) {
@@ -156,60 +136,27 @@ function main() {
       console.error('Available: ' + Object.keys(PLANS).join(', '));
       process.exit(1);
     }
-    env.WRAPPED_MONEY_PAID = plan.money;
-    env.WRAPPED_MONEY_DETAIL = plan.detail;
-  } else if (args.money) {
-    env.WRAPPED_MONEY_PAID = args.money;
-    if (args.moneyDetail) env.WRAPPED_MONEY_DETAIL = args.moneyDetail;
-  } else {
-    // Default to Max 20x
-    env.WRAPPED_MONEY_PAID = PLANS.max.money;
-    env.WRAPPED_MONEY_DETAIL = PLANS.max.detail;
+    env.RECAP_PLAN_COST = plan.cost;
   }
 
-  if (args.sanitize) env.WRAPPED_SANITIZE = '1';
-
   // Build python args
-  const pyArgs = [];
-  if (args.publish) pyArgs.push('--publish');
-
-  // Run the Python script from the package directory
   const scriptDir = path.join(__dirname, '..');
-  const scriptPath = path.join(scriptDir, 'generate_wrapped.py');
+  const scriptPath = path.join(scriptDir, 'generate_recap.py');
+  const pyArgs = ['-u', scriptPath];
 
-  const result = spawnSync(pythonCmd, ['-u', scriptPath, ...pyArgs], {
+  if (args.days) pyArgs.push('--days', args.days);
+  if (args.project) pyArgs.push('--project', args.project);
+  if (args.plan) pyArgs.push('--plan', args.plan);
+  if (args.json) pyArgs.push('--json');
+  if (args.html) pyArgs.push('--html', args.html);
+
+  const result = spawnSync(pythonCmd, pyArgs, {
     cwd: scriptDir,
     env,
     stdio: 'inherit',
   });
 
-  if (result.status !== 0) {
-    console.error('\nGeneration failed (exit code ' + result.status + ')');
-    process.exit(result.status || 1);
-  }
-
-  // Copy output to CWD
-  const src = path.join(scriptDir, 'dist', 'recap.html');
-  if (!fs.existsSync(src)) {
-    console.error('Error: Expected output not found at ' + src);
-    process.exit(1);
-  }
-
-  const dest = path.join(process.cwd(), 'recap.html');
-  // Don't copy if CWD is the package dir (running from repo checkout)
-  if (path.resolve(src) !== path.resolve(dest)) {
-    fs.copyFileSync(src, dest);
-  }
-
-  // Open in browser
-  try {
-    const cmd = process.platform === 'darwin' ? 'open'
-              : process.platform === 'win32' ? 'start ""'
-              : 'xdg-open';
-    execSync(cmd + ' "' + dest + '"', { stdio: 'ignore' });
-  } catch {
-    // Browser open is best-effort
-  }
+  process.exit(result.status || 0);
 }
 
 main();

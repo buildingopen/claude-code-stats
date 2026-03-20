@@ -1,6 +1,6 @@
-# Claude Code Stats
+# Claude Recap
 
-Spotify Wrapped for Claude Code. Analyzes your `~/.claude/projects/` session data and generates a visual HTML report with usage stats, token costs, coding patterns, and personalized insights.
+Operational stats dashboard for [Claude Code](https://docs.anthropic.com/en/docs/claude-code). Pure numbers, terminal or HTML export.
 
 ## Quick Start
 
@@ -8,59 +8,76 @@ Spotify Wrapped for Claude Code. Analyzes your `~/.claude/projects/` session dat
 npx claude-recap
 ```
 
-That's it. Author name, timezone, and plan ($200 Max) are auto-detected. Generates `./recap.html` and opens it in your browser.
-
-Requires: Node.js 14+ and Python 3.8+ on PATH.
+Requires Python 3.8+ and Node.js 14+.
 
 ## What You Get
 
-A self-contained HTML report with 20+ animated slides:
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  CLAUDE RECAP                              Mar 1 - Mar 20
+                                                     20 days
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-- **Sessions & hours** coded with Claude, daily streaks, peak coding days
-- **Lines of code** generated across all projects
-- **Token usage** and estimated cost (input, output, cache)
-- **ROI calculation** based on your plan ($20 Pro, $100 Max 5x, $200 Max 20x)
-- **Project breakdown** with per-project stats
-- **Prompting style** analysis: length, specificity, effectiveness
-- **Error patterns**: taxonomy of 14 error categories
-- **Retry loops**: wasted tokens from stuck patterns
-- **Communication tone**: niceness score, swear tracking
-- **Self-scoring bias**: how accurately Claude rates its own work
-- **Tool usage**: misuse detection (Bash vs Read, etc.)
-- **Coding personality**: archetype based on your usage patterns
-- **Percentile ranking**: how you compare to other Claude Code users
+OVERVIEW
+
+  Sessions            482        Active Days   18/20
+  Total Hours       187.0h        Projects      12
+  Avg Session          23 min     Messages      14,291
+
+COST & ROI
+
+  API Value            $1,247.83
+  Plan Cost              $200.00    (Max)
+  ROI                       6.2x
+
+MODELS / TOKENS / PROJECTS / ACTIVITY / ERRORS / TREND
+```
 
 ## Options
 
 ```bash
-npx claude-recap                    # Just works (defaults to Max 20x plan)
-npx claude-recap --plan pro         # Pro plan ($20/month)
-npx claude-recap --plan max5        # Max 5x ($100/month)
-npx claude-recap --sanitize         # Anonymize project names for sharing
-npx claude-recap --publish          # Publish to entropy.buildingopen.org
-npx claude-recap --help             # Show all options
+npx claude-recap                          # Full dashboard, all time
+npx claude-recap --days 7                 # Last 7 days only
+npx claude-recap --days 30               # Last 30 days
+npx claude-recap --project "OpenChat V4"  # Filter to one project
+npx claude-recap --plan pro               # ROI calc with $20/mo
+npx claude-recap --json                   # Machine-readable JSON
+npx claude-recap --html recap.html        # Export HTML (Cmd+P for PDF)
+npx claude-recap --help
+```
+
+## Plans for ROI
+
+| Flag | Monthly Cost | Plan |
+|------|-------------|------|
+| `--plan pro` | $20 | Pro |
+| `--plan max5` | $100 | Max 5x |
+| `--plan max` | $200 | Max 20x (default) |
+
+## Custom Data Directory
+
+By default, sessions are read from `~/.claude/projects/`. Override with:
+
+```bash
+CLAUDE_PROJECTS_DIR=/path/to/projects npx claude-recap
+```
+
+Multiple directories (colon-separated):
+
+```bash
+CLAUDE_PROJECTS_DIR=/path/one:/path/two npx claude-recap
+```
+
+## JSON Output
+
+```bash
+npx claude-recap --json | python3 -m json.tool
+npx claude-recap --json --days 7 > stats.json
 ```
 
 ## How It Works
 
-1. Reads Claude Code session files from `~/.claude/projects/` (JSONL format)
-2. Runs 10 pattern analyzers in parallel (pure Python, no pip dependencies)
-3. Computes aggregated stats, percentiles, and a personality archetype
-4. Generates a single self-contained HTML file with animated slides
-
-All processing happens locally. No data is sent anywhere unless you use `--publish`.
-
-## Multiple Machines
-
-If you use Claude Code on more than one machine, combine session directories:
-
-```bash
-CLAUDE_PROJECTS_DIR="/path/to/mac-sessions:/path/to/server-sessions" npx claude-recap
-```
-
-## Privacy
-
-Your session data never leaves your machine. The `--sanitize` flag strips project names, prompt examples, and machine names. The `--publish` flag uploads only the final HTML report (not raw data) and always auto-sanitizes.
+Reads Claude Code JSONL session transcripts locally. Extracts token usage, timestamps, error patterns, and model info. Computes costs using published API pricing. All processing is local, no data leaves your machine.
 
 ## License
 

@@ -24,10 +24,12 @@ except ImportError:
     from config import CLAUDE_PROJECTS_DIR, output_path as _output_path, resolve_project_name, REJECTION_PATTERNS
 OUTPUT_FILE = _output_path("project_stats")
 
-# Pricing per million tokens
+# Pricing per million tokens (2026 rates)
+# Cache read = 10% of input, cache creation = 125% of input (applied in estimate_costs)
 PRICING = {
-    "opus": {"input": 15.0, "output": 75.0},
+    "opus": {"input": 5.0, "output": 25.0},
     "sonnet": {"input": 3.0, "output": 15.0},
+    "haiku": {"input": 1.0, "output": 5.0},
 }
 
 
@@ -38,6 +40,8 @@ def classify_model(model_name):
     m = model_name.lower()
     if "opus" in m:
         return "opus"
+    if "haiku" in m:
+        return "haiku"
     return "sonnet"
 
 
