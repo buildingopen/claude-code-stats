@@ -29,7 +29,7 @@ from patterns.project_stats import (
 )
 from patterns.error_taxonomy import classify_error
 
-VERSION = "2.0.8"
+VERSION = "2.0.9"
 
 # ---------------------------------------------------------------------------
 # 1. Formatting utilities
@@ -861,6 +861,9 @@ def render_dashboard(overview, cost, models, tokens, projects, activity, errors,
     w(f"  {DIM}{footer_left}{' ' * max(gap, 2)}{footer_right}{R}")
     w(f"  {DIM}Export: --html recap.html (Cmd+P for PDF) · --json for machines{R}")
     w("")
+    w(f"  {DIM}Community project, not affiliated with Anthropic. Costs are estimates{R}")
+    w(f"  {DIM}based on published API pricing. Verify methodology in source code.{R}")
+    w("")
 
     print("\n".join(lines))
 
@@ -1085,8 +1088,9 @@ def render_html(overview, cost, models, tokens, projects, activity, errors, tren
 </header>
 {body}
 <footer>
-  <span>claude-recap v{VERSION}</span>
-  <a href="https://github.com/buildingopen/claude-code-stats">github.com/buildingopen/claude-code-stats</a>
+  <div><span>claude-recap v{VERSION}</span>
+  <a href="https://github.com/buildingopen/claude-code-stats">github.com/buildingopen/claude-code-stats</a></div>
+  <div style="margin-top:0.5em">Community project, not affiliated with Anthropic. Costs are estimates based on published API pricing. Verify methodology in source code.</div>
 </footer>
 </body>
 </html>"""
