@@ -15,8 +15,8 @@ const PLANS = {
 const HELP = `
 Claude Code Stats - Your AI coding story, visualized.
 
-Usage: npx claude-code-stats
-       npx claude-code-stats --plan max
+Usage: npx cc-stats
+       npx cc-stats --plan max
 
 Options:
   --plan PLAN          pro | max5 | max (default: max)
@@ -93,7 +93,7 @@ function main() {
 
   if (args.version) {
     const pkg = require('../package.json');
-    console.log('claude-code-stats ' + pkg.version);
+    console.log('cc-stats ' + pkg.version);
     process.exit(0);
   }
 

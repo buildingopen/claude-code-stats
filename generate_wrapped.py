@@ -1669,15 +1669,16 @@ def get_community_count():
         return None
 
 
-def _progress(label, value="", width=40):
-    """Print a progress line: label padded to width, then value."""
+def _step(label, value="", width=38):
+    """Print a progress step with checkmark."""
     padding = max(1, width - len(label))
-    sys.stdout.write(f"  {label}{'.' * padding} {value}\n")
+    check = "\u2713" if value else "\u2026"
+    sys.stdout.write(f"  {check} {label}{'.' * padding} {value}\n")
     sys.stdout.flush()
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Generate Claude Code Entropy report")
+    parser = argparse.ArgumentParser(description="Generate Claude Code Stats report")
     parser.add_argument("--publish", action="store_true", help="Publish to entropy.buildingopen.org (auto-sanitized)")
     parser.add_argument("--no-publish", action="store_true", help="(deprecated, now the default)")
     parser.add_argument("--sanitize", action="store_true", help="Anonymize local HTML (project names, prompts, swears, machines)")
@@ -1686,32 +1687,32 @@ def main():
     should_publish = args.publish
     should_sanitize_local = args.sanitize or os.environ.get("WRAPPED_SANITIZE") == "1"
 
-    # Welcome screen
+    # Welcome banner
     print()
-    print("  ============================================")
-    print()
-    print("    CLAUDE CODE ENTROPY")
-    print("    Your AI coding story, visualized.")
-    print()
-    print("    100% local analysis. No AI calls.")
-    print("    Data never leaves your machine")
-    print("    unless you --publish.")
-    print()
-    print("  ============================================")
+    print("  \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510")
+    print("  \u2502                                          \u2502")
+    print("  \u2502   Claude Code Stats                      \u2502")
+    print("  \u2502   Your AI coding story, visualized.       \u2502")
+    print("  \u2502                                          \u2502")
+    print("  \u2502   \u2714 100% local analysis                  \u2502")
+    print("  \u2502   \u2714 No AI calls, no network requests      \u2502")
+    print("  \u2502   \u2714 Pure Python, zero dependencies        \u2502")
+    print("  \u2502                                          \u2502")
+    print("  \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518")
     print()
 
     data = collect_data()
-    _progress("Scanning sessions", f"{data['session_count']} found")
+    _step("Scanning sessions", f"{data['session_count']} found")
 
     d = compute_aggregates(data)
-    _progress("Analyzing patterns", "done")
+    _step("Analyzing patterns", f"{d['hours']} hours of coding")
 
     rules = compute_rules(d)
     percentiles = compute_percentiles(d)
     archetype = compute_archetype(d, percentiles)
-    _progress("Computing your archetype", "done")
-
     arch_key, arch_name, arch_line, arch_share, arch_stats_html = archetype
+    _step("Computing your archetype", arch_name)
+
     author = AUTHOR_NAME or "Claude Code User"
 
     # Always generate hash (used for og:image placeholder even in local mode)
@@ -1730,25 +1731,38 @@ def main():
     else:
         html = html.replace("__SHARE_HASH__", "preview")
 
-    _progress("Building report", "done")
+    _step("Building report", "done")
 
     # Apply local sanitization if requested
     if should_sanitize_local:
         html, local_counts = sanitize_html_for_publish(html)
-        _progress("Sanitizing local HTML", "done")
+        _step("Sanitizing", "done")
 
     OUTPUT_DIR.mkdir(exist_ok=True)
     OUTPUT_PATH.write_text(html)
-    print()
-    print(f"  Output: {OUTPUT_PATH}")
 
-    # Summary stats
+    # Summary box
+    money = os.environ.get("WRAPPED_MONEY_PAID", "200")
+    money_detail = os.environ.get("WRAPPED_MONEY_DETAIL", "")
     overall_pct = percentiles.get("overall", 0)
-    pct_text = f" (top {100 - overall_pct}%)" if overall_pct >= 50 else ""
+    roi = round(d["total_cost"] / max(int(money), 1))
+    pct_label = f"top {100 - overall_pct}%" if overall_pct >= 50 else ""
+
     print()
-    print(f"  {arch_name}{pct_text}")
-    print(f"  {d['sessions']} sessions, {d['hours']} hours, {fmt_compact(d['loc'])} LOC")
-    print(f"  {d['tokens_display']}{d['tokens_suffix']} tokens, ${d['total_cost']:,.0f} cost, {d['success_pct']}% success")
+    print("  \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510")
+    print(f"  \u2502  {author:<40}\u2502")
+    print(f"  \u2502  {arch_name:<40}\u2502")
+    if pct_label:
+        print(f"  \u2502  {pct_label:<40}\u2502")
+    print(f"  \u2502{'':42}\u2502")
+    print(f"  \u2502  {d['sessions']} sessions, {d['hours']} hours, {fmt_compact(d['loc'])} LOC{'':<10}\u2502")
+    tokens_line = f"{d['tokens_display']}{d['tokens_suffix']} tokens, ${d['total_cost']:,.0f} estimated cost"
+    print(f"  \u2502  {tokens_line:<40}\u2502")
+    roi_line = f"{roi}x return on ${money}/mo" + (f" ({money_detail})" if money_detail else "")
+    print(f"  \u2502  {roi_line:<40}\u2502")
+    print(f"  \u2502{'':42}\u2502")
+    print(f"  \u2502  \u2192 {OUTPUT_PATH}{'':<20}\u2502")
+    print("  \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518")
     print()
 
     if should_publish:

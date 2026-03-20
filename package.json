@@ -1,9 +1,9 @@
 {
-  "name": "claude-code-stats",
-  "version": "2.0.1",
+  "name": "cc-stats",
+  "version": "1.0.0",
   "description": "Spotify Wrapped for Claude Code - visualize your AI coding stats, token usage, and costs",
   "bin": {
-    "claude-code-stats": "./bin/claude-entropy.js"
+    "cc-stats": "./bin/claude-code-stats.js"
   },
   "keywords": [
     "claude",
