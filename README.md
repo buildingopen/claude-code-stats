@@ -8,7 +8,7 @@ Spotify Wrapped for Claude Code. Analyzes your `~/.claude/projects/` session dat
 npx claude-recap
 ```
 
-That's it. Author name, timezone, and plan ($200 Max) are auto-detected. Generates `./wrapped.html` and opens it in your browser.
+That's it. Author name, timezone, and plan ($200 Max) are auto-detected. Generates `./recap.html` and opens it in your browser.
 
 Requires: Node.js 14+ and Python 3.8+ on PATH.
 

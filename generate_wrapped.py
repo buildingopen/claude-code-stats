@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-Generate a self-contained wrapped.html from Claude Code session data.
+Generate a self-contained recap.html from Claude Code session data.
 
 Imports analyzers from pattern scripts, iterates sessions once,
-computes all metrics, and string-substitutes into wrapped.html template.
-Outputs dist/wrapped.html.
+computes all metrics, and string-substitutes into recap.html template.
+Outputs dist/recap.html.
 """
 
 import argparse
@@ -119,9 +119,9 @@ def compute_percentiles(d):
 # ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
-TEMPLATE_PATH = SCRIPT_DIR / "wrapped.html"
+TEMPLATE_PATH = SCRIPT_DIR / "recap.html"
 OUTPUT_DIR = SCRIPT_DIR / "dist"
-OUTPUT_PATH = OUTPUT_DIR / "wrapped.html"
+OUTPUT_PATH = OUTPUT_DIR / "recap.html"
 
 # Author config (overridable via env vars)
 AUTHOR_NAME = os.environ.get("WRAPPED_AUTHOR", "")
@@ -1756,7 +1756,7 @@ def main():
     sessions_line = f"{d['sessions']} sessions, {d['hours']} hours, {fmt_compact(d['loc'])} LOC"
     tokens_line = f"{d['tokens_display']}{d['tokens_suffix']} tokens, ${d['total_cost']:,.0f} est. cost"
     roi_line = f"{roi}x return on ${money}/mo" + (f" ({money_detail})" if money_detail else "")
-    out_line = f"\u2192 ./wrapped.html"
+    out_line = f"\u2192 ./recap.html"
 
     print()
     print("  \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510")

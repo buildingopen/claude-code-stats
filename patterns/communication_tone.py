@@ -557,7 +557,7 @@ def main():
             for excerpt, words, hour in peak_examples[:5]:
                 print(f"  [{', '.join(words)}] {excerpt[:120]}")
 
-    # JSON data for wrapped.html (easy copy-paste)
+    # JSON data for recap.html (easy copy-paste)
     print(f"\n=== JSON FOR WRAPPED ===")
     swears_arr = [agg_swears_hour.get(h, 0) for h in range(24)]
     nice_arr = [agg_nice_hour.get(h, 0) for h in range(24)]

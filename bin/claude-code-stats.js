@@ -28,7 +28,7 @@ Options:
 
 All analysis runs locally. No data leaves your machine unless you --publish.
 
-Output: ./wrapped.html (auto-opens in browser)
+Output: ./recap.html (auto-opens in browser)
 `.trim();
 
 function parseArgs(argv) {
@@ -189,13 +189,13 @@ function main() {
   }
 
   // Copy output to CWD
-  const src = path.join(scriptDir, 'dist', 'wrapped.html');
+  const src = path.join(scriptDir, 'dist', 'recap.html');
   if (!fs.existsSync(src)) {
     console.error('Error: Expected output not found at ' + src);
     process.exit(1);
   }
 
-  const dest = path.join(process.cwd(), 'wrapped.html');
+  const dest = path.join(process.cwd(), 'recap.html');
   // Don't copy if CWD is the package dir (running from repo checkout)
   if (path.resolve(src) !== path.resolve(dest)) {
     fs.copyFileSync(src, dest);
