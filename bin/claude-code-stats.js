@@ -22,7 +22,7 @@ Options:
   --project NAME       Filter to one project
   --plan PLAN          pro | max5 | max (default: max) for ROI calc
   --json               Machine-readable JSON output
-  --html FILE          Export HTML dashboard to FILE
+  --no-color           Disable ANSI colors (for CI/piping)
   -v, --version        Show version
   -h, --help           Show this help
 
@@ -32,7 +32,7 @@ Examples:
   npx claude-recap --project "OpenChat V4"  Single project
   npx claude-recap --plan pro               ROI with $20/mo plan
   npx claude-recap --json                   JSON output
-  npx claude-recap --html recap.html        Export HTML (open in browser for PDF)
+  npx claude-recap --no-color                No ANSI colors (CI/piping)
 `.trim();
 
 function parseArgs(argv) {
@@ -46,8 +46,8 @@ function parseArgs(argv) {
       args.version = true;
     } else if (arg === '--json') {
       args.json = true;
-    } else if (arg === '--html' && i + 1 < argv.length) {
-      args.html = argv[++i];
+    } else if (arg === '--no-color') {
+      args.noColor = true;
     } else if (arg === '--days' && i + 1 < argv.length) {
       args.days = argv[++i];
     } else if (arg === '--project' && i + 1 < argv.length) {
@@ -148,7 +148,7 @@ function main() {
   if (args.project) pyArgs.push('--project', args.project);
   if (args.plan) pyArgs.push('--plan', args.plan);
   if (args.json) pyArgs.push('--json');
-  if (args.html) pyArgs.push('--html', args.html);
+  if (args.noColor) pyArgs.push('--no-color');
 
   const result = spawnSync(pythonCmd, pyArgs, {
     cwd: scriptDir,

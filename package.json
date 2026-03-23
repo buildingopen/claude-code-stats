@@ -1,6 +1,6 @@
 {
   "name": "claude-recap",
-  "version": "2.0.9",
+  "version": "2.1.0",
   "description": "Operational stats dashboard for Claude Code - sessions, costs, tokens, errors, trends",
   "bin": {
     "claude-recap": "./bin/claude-code-stats.js"

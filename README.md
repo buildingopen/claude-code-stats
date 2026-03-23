@@ -1,6 +1,6 @@
 # Claude Recap
 
-Operational stats dashboard for [Claude Code](https://docs.anthropic.com/en/docs/claude-code). Pure numbers, terminal or HTML export.
+Operational stats dashboard for [Claude Code](https://docs.anthropic.com/en/docs/claude-code). Pure numbers, terminal output.
 
 ## Quick Start
 
@@ -42,7 +42,7 @@ npx claude-recap --days 30               # Last 30 days
 npx claude-recap --project "OpenChat V4"  # Filter to one project
 npx claude-recap --plan pro               # ROI calc with $20/mo
 npx claude-recap --json                   # Machine-readable JSON
-npx claude-recap --html recap.html        # Export HTML (Cmd+P for PDF)
+npx claude-recap --no-color               # No ANSI colors (CI/piping)
 npx claude-recap --help
 ```
 
